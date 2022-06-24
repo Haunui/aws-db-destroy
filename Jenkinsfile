@@ -4,7 +4,9 @@ pipeline {
     stage('Destroy Instance') {
       steps {
         script {
-          sh "bash destroy.sh"
+          sshagent (credentials: ['bkp_ssh_credentials']) {
+            sh "bash destroy.sh"
+          }
         }
       }
     }
