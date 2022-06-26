@@ -27,6 +27,7 @@ INSTANCE_DATA=$(aws ec2 describe-instances --filters Name=tag:Name,Values=HSAINT
 
 if [ -z "$INSTANCE_DATA" ]; then
   echo "Instance (IP: $IP) not found."
+  rm -f instance_ip
   exit 0
 fi
 
