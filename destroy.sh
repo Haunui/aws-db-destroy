@@ -27,7 +27,7 @@ INSTANCE_DATA=$(aws ec2 describe-instances --filters Name=tag:Name,Values=HSAINT
 
 if [ -z "$INSTANCE_DATA" ]; then
   echo "Instance (IP: $IP) not found."
-  ssh $SSH_OPTS $BKP_SSH_LOGIN "rm -f instance_ip" < /dev/null
+  ssh $SSH_OPTS $BKP_SSH_LOGIN "rm -f $BKP_PATH/instance_ip" < /dev/null
   exit 0
 fi
 
