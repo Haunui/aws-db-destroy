@@ -1,7 +1,5 @@
 #!/usr/bin/bash
 
-SSH_OPTS="-o StrictHostKeyChecking=no"
-
 shutdown_instance() {
 	STATE=$1
 	INSTANCE_ID=$2
@@ -15,29 +13,28 @@ shutdown_instance() {
 	echo "Waiting for '$INSTANCE_ID' to shutdown.. (status : $STATE)"
 }
 
-if ! ssh $SSH_OPTS $BKP_SSH_LOGIN "cat $BKP_PATH/instance_ip 2> /dev/null" < /dev/null > instance_ip; then
-  echo "No instance found"
-  echo "Nothing to do."
-  exit 0
-fi
+while IFS= read -r line; do
+	INSTANCE_ID=$(echo "$line" | jq '.InstanceId' | sed 's/"//g')
+	STATE=$(echo "$line" | jq '.State.Name' | sed 's/"//g')
 
-IP=$(cat instance_ip)
+	if [[ $STATE != terminated ]]; then
+		f=1
+		for i in {0..20}; do
+			if [ -z "${pids[${i}]}" ]; then
+				shutdown_instance "$STATE" "$INSTANCE_ID" &
+				pids[${i}]=$!
+				break
+			fi
+		done
+		
+	fi 
+done < <(aws ec2 describe-instances --filters Name=tag:Name,Values=HSAINT-instance --query 'Reservations[*]' | jq -c '.[].Instances[]')
 
-INSTANCE_DATA=$(aws ec2 describe-instances --filters Name=tag:Name,Values=HSAINT-instance --query 'Reservations[*]' | jq -c ".[].Instances[] | select(.PublicIpAddress==\"$IP\")")
+sleep 3
 
-if [ -z "$INSTANCE_DATA" ]; then
-  echo "Instance (IP: $IP) not found."
-  ssh $SSH_OPTS $BKP_SSH_LOGIN "rm -f $BKP_PATH/instance_ip" < /dev/null
-  exit 0
-fi
-
-INSTANCE_ID=$(echo "$INSTANCE_DATA" | jq '.InstanceId' | sed 's/"//g')
-STATE=$(echo "$INSTANCE_DATA" | jq '.State.Name' | sed 's/"//g')
-	
-if [[ $STATE != terminated ]]; then
-  f=1
-  shutdown_instance "$STATE" "$INSTANCE_ID"
-fi
+for pid in ${pids[@]}; do
+	wait $pid
+done
 
 if [ -z "$f" ]; then
 	echo "Nothing to do."
