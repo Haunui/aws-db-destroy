@@ -13,9 +13,7 @@ shutdown_instance() {
 	echo "Waiting for '$INSTANCE_ID' to shutdown.. (status : $STATE)"
 }
 
-BKP_SSH_LOGIN="bkp@192.168.0.9"
-
-if ! ssh -o StrictHostKeyChecking=no $BKP_SSH_LOGIN 'cat /volume1/aws-bkp/instance_ip' < /dev/null > instance_ip; then
+if ! ssh -o StrictHostKeyChecking=no $BKP_SSH_LOGIN "cat $BKP_PATH/instance_ip" < /dev/null > instance_ip; then
   echo "No instance found"
   echo "Nothing to do."
   exit 0
