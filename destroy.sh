@@ -36,7 +36,7 @@ for pid in ${pids[@]}; do
 	wait $pid
 done
 
-if ssh -o StrictHostKeyChecking=no $BKP_SSH_LOGIN "rm -f $BKP_PATH/instance_ip 2> /dev/null" < /dev/null; then
+if ssh -o StrictHostKeyChecking=no $BKP_SSH_LOGIN "ls $BKP_PATH/instance_ip &> /dev/null && rm -f $BKP_PATH/instance_ip" < /dev/null; then
   echo "instance_ip file removed from backup server"
   f=1
 fi
