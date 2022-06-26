@@ -15,7 +15,7 @@ shutdown_instance() {
 	echo "Waiting for '$INSTANCE_ID' to shutdown.. (status : $STATE)"
 }
 
-if ! ssh $SSH_OPTS $BKP_SSH_LOGIN "cat $BKP_PATH/instance_ip" < /dev/null > instance_ip; then
+if ! ssh $SSH_OPTS $BKP_SSH_LOGIN "cat $BKP_PATH/instance_ip 2> /dev/null" < /dev/null > instance_ip; then
   echo "No instance found"
   echo "Nothing to do."
   exit 0
