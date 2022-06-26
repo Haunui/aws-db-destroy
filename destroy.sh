@@ -1,5 +1,7 @@
 #!/usr/bin/bash
 
+SSH_OPTS="-o StrictHostKeyChecking=no"
+
 shutdown_instance() {
 	STATE=$1
 	INSTANCE_ID=$2
@@ -13,7 +15,7 @@ shutdown_instance() {
 	echo "Waiting for '$INSTANCE_ID' to shutdown.. (status : $STATE)"
 }
 
-if ! ssh -o StrictHostKeyChecking=no $BKP_SSH_LOGIN "cat $BKP_PATH/instance_ip" < /dev/null > instance_ip; then
+if ! ssh $SSH_OPTS $BKP_SSH_LOGIN "cat $BKP_PATH/instance_ip" < /dev/null > instance_ip; then
   echo "No instance found"
   echo "Nothing to do."
   exit 0
@@ -25,7 +27,7 @@ INSTANCE_DATA=$(aws ec2 describe-instances --filters Name=tag:Name,Values=HSAINT
 
 if [ -z "$INSTANCE_DATA" ]; then
   echo "Instance (IP: $IP) not found."
-  rm -f instance_ip
+  ssh $SSH_OPTS $BKP_SSH_LOGIN "rm -f instance_ip" < /dev/null
   exit 0
 fi
 
